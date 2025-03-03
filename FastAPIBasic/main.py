@@ -4,13 +4,34 @@ import uvicorn
 from fastapi import FastAPI, Query, Form, Request
 import logging
 from pydantic import BaseModel
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI
 from fastapi.templating import Jinja2Templates
-from starlette.responses import HTMLResponse
+from fastapi.responses import HTMLResponse
+from fastapi import Request
+from fastapi.staticfiles import StaticFiles
+import os
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+# Set the path for your templates folder
 templates = Jinja2Templates(directory="templates")
+
+@app.get("/read_item", response_class=HTMLResponse)
+async def read_item(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request, "message": "Hello, FastAPI!"})
+
+
+# Mount static folder at '/static'
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Set the path for your templates folder
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/", response_class=HTMLResponse)
+async def read_item(request: Request):
+    # You can pass variables to the template here
+    return templates.TemplateResponse("index.html", {"request": request, "message": "Hello, FastAPI!"})
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -59,10 +80,19 @@ def create_student(student_data: Student):
 def form_data(username: str = Form(), password: str= Form()):
     return ({"User Name": username, "Password": password})
 
+from fastapi import BackgroundTasks, FastAPI
 
-@app.get("/index", response_class=HTMLResponse)
-def read_items(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+def write_notification(email: str, message=""):
+    with open("log.txt", mode="w") as email_file:
+        content = f"notification for {email}: {message}"
+        email_file.write(content)
+
+
+@app.post("/send-notification/{email}")
+async def send_notification(email: str, background_tasks: BackgroundTasks):
+    background_tasks.add_task(write_notification, email, message="some notification")
+    return {"message": "Notification sent in the background"}
+
 
 if __name__ == "__main__":
     uvicorn.run(app, port=5300)
