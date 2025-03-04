@@ -9,6 +9,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi import Request
 from fastapi.staticfiles import StaticFiles
+from fastapi import BackgroundTasks
 import os
 
 app = FastAPI()
@@ -79,8 +80,6 @@ def create_student(student_data: Student):
 @app.post("/form/data")
 def form_data(username: str = Form(), password: str= Form()):
     return ({"User Name": username, "Password": password})
-
-from fastapi import BackgroundTasks, FastAPI
 
 def write_notification(email: str, message=""):
     with open("log.txt", mode="w") as email_file:
